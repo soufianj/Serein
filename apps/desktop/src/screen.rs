@@ -66,7 +66,6 @@ struct Live {
 struct Closing {
 	context: Context,
 	started: Instant,
-	timed_out: bool,
 }
 struct SourceScan {
 	generation: u64,
@@ -139,7 +138,6 @@ impl Screen {
 			self.closing = Some(Closing {
 				context,
 				started: Instant::now(),
-				timed_out: false,
 			});
 			self.command = Some(Command::Voice(voice::Command::StopStream {
 				channel: context.channel,
@@ -474,13 +472,14 @@ impl Screen {
 			ui.screen.preview = None;
 		}
 
-		if let Some(closing) = &mut self.closing {
-			if !closing.timed_out && closing.started.elapsed() >= SIGNAL_TIMEOUT {
-				closing.timed_out = true;
-				self.status = "Discord did not acknowledge stopping screen share; leave the call before sharing again";
+		// The gateway releases an unanswered stop sooner; this only covers a stop that never
+		// reached it, so the share control can never stay stuck until the call is left.
+		if let Some(closing) = &self.closing {
+			if closing.started.elapsed() >= SIGNAL_TIMEOUT {
+				self.closing = None;
+				self.status = "Discord did not confirm that screen sharing stopped";
 				self.toast = Some((ui::design::Level::Warning, self.status));
-			}
-			if !closing.timed_out {
+			} else {
 				ctx.request_repaint_after(SIGNAL_TIMEOUT.saturating_sub(closing.started.elapsed()));
 			}
 		}
