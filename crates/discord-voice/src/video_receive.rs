@@ -21,8 +21,10 @@ pub const MAX_SOURCES: usize = 16;
 /// Decoders kept alive at once; each holds reference pictures for one remote user.
 const MAX_DECODERS: usize = 8;
 const QUEUE_BYTES: usize = 16 * 1024 * 1024;
-const MAX_WIDTH: u32 = 1920;
-const MAX_PIXELS: u64 = 1920 * 1080;
+/// Discord's largest stream preset is 4K; streamers sending source resolution from a 1440p,
+/// ultrawide or 4K display otherwise never produce a picture here.
+const MAX_WIDTH: u32 = 3840;
+const MAX_PIXELS: u64 = 3840 * 2160;
 const START_CODE: [u8; 4] = [0, 0, 0, 1];
 const MAX_DECODE_AGE: Duration = Duration::from_millis(150);
 
@@ -1328,8 +1330,10 @@ mod tests {
 		assert!(!gated.accept(7, false));
 		assert!(is_keyframe(&[0, 0, 0, 1, 0x67, 1, 0, 0, 1, 0x65, 2]));
 		assert!(!is_keyframe(&[0, 0, 0, 1, 0x41, 9]));
-		assert!(bounded(1920, 1080).is_ok());
-		assert!(bounded(1920, 1081).is_err());
+		assert!(bounded(2560, 1080).is_ok());
+		assert!(bounded(3840, 2160).is_ok());
+		assert!(bounded(3840, 2161).is_err());
+		assert!(bounded(3841, 1).is_err());
 		assert!(bounded(0, 4).is_err());
 	}
 	#[test]
