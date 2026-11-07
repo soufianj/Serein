@@ -1618,6 +1618,9 @@ async fn run_recoverable(
 				_=tokio::time::sleep_until(calls.departure_deadline.unwrap_or(ready_deadline)), if calls.departure_deadline.is_some() => {
 					if let Some(event)=calls.departure_expired() {emit(event)?;}
 				}
+				_=tokio::time::sleep_until(calls.stream_departure().unwrap_or(ready_deadline)), if calls.stream_departure().is_some() => {
+					if let Some(event)=calls.stream_departure_expired() {emit(event)?;}
+				}
 				changed = member_queries.changed(), if queries_open && ready_at.is_some() => {
 					queries_open = changed.is_ok();
 					queries.update(&member_queries.borrow_and_update());

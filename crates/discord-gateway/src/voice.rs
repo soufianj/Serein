@@ -18,6 +18,9 @@ use zeroize::Zeroizing;
 
 /// Rapid mute/deafen toggles inside this window collapse into one voice state update.
 const STATE_COALESCE: Duration = Duration::from_millis(120);
+/// Discord answers an own stream delete with `STREAM_DELETE`; when that never arrives, the
+/// slot is released anyway so a lost acknowledgement cannot block sharing until the call ends.
+pub(super) const STREAM_DEPARTURE: Duration = Duration::from_secs(5);
 
 struct StreamAttempt {
 	channel: Id,
@@ -25,7 +28,8 @@ struct StreamAttempt {
 	stream_request: u64,
 	key: String,
 	created: Option<(Id, Id)>,
-	departing: bool,
+	/// Set once the delete is sent: when the slot is released without Discord's answer.
+	departing: Option<Instant>,
 }
 /// One explicitly requested view of another participant's stream (unofficial opcode 20).
 struct WatchAttempt {
@@ -107,6 +111,23 @@ impl Calls {
 			self.camera = false;
 		}
 	}
+	pub(super) fn stream_departure(&self) -> Option<Instant> {
+		self.stream.as_ref().and_then(|stream| stream.departing)
+	}
+
+	/// Ends an own stream whose delete Discord never acknowledged.
+	pub(super) fn stream_departure_expired(&mut self) -> Option<Event> {
+		self.stream_departure()
+			.filter(|deadline| Instant::now() >= *deadline)?;
+		let stream = self.stream.take()?;
+		Some(Event::Voice(voice::Event::Stream {
+			channel: stream.channel,
+			request: stream.request,
+			stream_request: stream.stream_request,
+			event: screen::Event::Deleted { reason: None },
+		}))
+	}
+
 	pub(super) fn has_call(&self) -> bool {
 		self.active.is_some() || self.departing.is_some()
 	}
@@ -503,7 +524,7 @@ impl Calls {
 					stream_request,
 					key,
 					created: None,
-					departing: false,
+					departing: None,
 				});
 				Ok(Some(Frame::Text(
 					json!({"op":18,"d":{"type":kind,"guild_id":self.active_guild,"channel_id":channel,"preferred_region":null}})
@@ -574,11 +595,11 @@ impl Calls {
 				};
 				if (stream.channel, stream.request, stream.stream_request)
 					!= (channel, request, stream_request)
-					|| stream.departing
+					|| stream.departing.is_some()
 				{
 					return Ok(None);
 				}
-				stream.departing = true;
+				stream.departing = Some(Instant::now() + STREAM_DEPARTURE);
 				Ok(Some(Frame::Text(
 					json!({"op":19,"d":{"stream_key":stream.key}})
 						.to_string()
@@ -761,7 +782,12 @@ impl Calls {
 		{
 			return Ok(());
 		}
-		if kind != "STREAM_DELETE" && self.stream.as_ref().is_some_and(|stream| stream.departing) {
+		if kind != "STREAM_DELETE"
+			&& self
+				.stream
+				.as_ref()
+				.is_some_and(|stream| stream.departing.is_some())
+		{
 			return Ok(());
 		}
 		match kind {
@@ -2417,8 +2443,8 @@ mod tests {
 		}
 	}
 
-	#[test]
-	fn screen_stream_matches_one_call_attempt_until_delete() {
+	#[tokio::test(start_paused = true)]
+	async fn screen_stream_matches_one_call_attempt_until_delete() {
 		let mut calls = Calls::default();
 		calls.allowed.insert(Id(20), Some(Id(10)));
 		calls
@@ -2587,6 +2613,46 @@ mod tests {
 			&emit,
 		).unwrap();
 		assert_eq!(events.lock().unwrap().len(), 4);
+
+		// An unanswered delete must not block sharing until the call is left.
+		let stream = |stream_request| Command::StartStream {
+			channel: Id(20),
+			request: 7,
+			stream_request,
+		};
+		calls
+			.stream_packet(stream(9), Some(Id(1)))
+			.unwrap()
+			.unwrap();
+		calls
+			.stream_packet(
+				Command::StopStream {
+					channel: Id(20),
+					request: 7,
+					stream_request: 9,
+				},
+				Some(Id(1)),
+			)
+			.unwrap()
+			.unwrap();
+		assert!(calls.stream_departure_expired().is_none());
+		assert!(calls.stream_packet(stream(10), Some(Id(1))).is_err());
+		tokio::time::advance(STREAM_DEPARTURE).await;
+		assert!(matches!(
+			calls.stream_departure_expired(),
+			Some(Event::Voice(voice::Event::Stream {
+				stream_request: 9,
+				event: screen::Event::Deleted { reason: None },
+				..
+			}))
+		));
+		assert!(calls.stream_departure().is_none());
+		assert!(
+			calls
+				.stream_packet(stream(10), Some(Id(1)))
+				.unwrap()
+				.is_some()
+		);
 	}
 
 	#[test]

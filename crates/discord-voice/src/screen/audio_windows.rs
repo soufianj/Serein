@@ -134,8 +134,30 @@ mod native {
 		unsafe { CoInitializeEx(None, COINIT_MULTITHREADED).ok()? };
 		let result = (|| {
 			let mut started = Some(started);
+			let mut restarts = Restarts::default();
 			while !input.stop.load(Ordering::Acquire) && !input.send.is_closed() {
-				capture(input, &mut started)?;
+				let began = Instant::now();
+				let Err(error) = capture(input, &mut started) else {
+					continue;
+				};
+				// Before the first start the caller reports the failure; a stop is not one.
+				if started.is_some() || input.stop.load(Ordering::Acquire) {
+					return Err(error);
+				}
+				if std::env::var_os("SEREIN_VOICE_DIAGNOSTICS").is_some_and(|value| value == "1") {
+					eprintln!(
+						"[Serein voice ScreenAudio] capture_error={:#010x}",
+						error.code().0
+					);
+				}
+				// A device change or wake invalidates the loopback client; recreate it.
+				if !restarts.failed(began.elapsed()) {
+					return Err(error);
+				}
+				let resume = Instant::now() + RESTART_DELAY;
+				while Instant::now() < resume && !input.stop.load(Ordering::Acquire) {
+					std::thread::sleep(Duration::from_millis(50));
+				}
 			}
 			Ok(())
 		})();
@@ -335,6 +357,26 @@ mod native {
 	}
 }
 
+#[cfg_attr(not(target_os = "windows"), allow(dead_code))]
+const RESTART_DELAY: std::time::Duration = std::time::Duration::from_millis(250);
+
+/// Bounds loopback recreation after runtime errors: a client that ran this long was healthy.
+#[cfg_attr(not(target_os = "windows"), allow(dead_code))]
+#[derive(Default)]
+struct Restarts(u32);
+
+#[cfg_attr(not(target_os = "windows"), allow(dead_code))]
+impl Restarts {
+	const HEALTHY: std::time::Duration = std::time::Duration::from_secs(5);
+	const LIMIT: u32 = 5;
+
+	/// Records a failed capture that ran for `ran`; `false` once the device is given up on.
+	fn failed(&mut self, ran: std::time::Duration) -> bool {
+		self.0 = if ran >= Self::HEALTHY { 1 } else { self.0 + 1 };
+		self.0 <= Self::LIMIT
+	}
+}
+
 struct Samples {
 	send: Sender<AudioChunk>,
 	stop: Arc<AtomicBool>,
@@ -392,6 +434,21 @@ impl Samples {
 #[cfg(test)]
 mod tests {
 	use super::*;
+
+	#[test]
+	fn loopback_restarts_are_bounded_unless_capture_recovers() {
+		let mut restarts = Restarts::default();
+		let quick = std::time::Duration::from_millis(10);
+		for _ in 0..Restarts::LIMIT {
+			assert!(restarts.failed(quick));
+		}
+		// A healthy run between device changes renews the budget.
+		assert!(restarts.failed(Restarts::HEALTHY));
+		for _ in 1..Restarts::LIMIT {
+			assert!(restarts.failed(quick));
+		}
+		assert!(!restarts.failed(quick));
+	}
 
 	#[test]
 	fn loopback_samples_are_gated_sanitized_and_bounded() {

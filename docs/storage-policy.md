@@ -323,8 +323,9 @@ do not wake the decoder. Hardware callbacks also check their original lifetime.
 The active-token table is capped at the existing 16 source users. Old fixed-size
 tokens can survive only in the 16-item / 16-MiB frame queue, the worker's current
 frame, and the existing at-most-eight decoders; they contain no media or account
-strings. The 1080p picture limit remains unchanged. Stopping the final video
-lifetime also frees the shared I420 scratch allocation (up to 3,110,400
+strings. Remote pictures are limited to 3840×2160 (raised from 1080p on
+October 31, 2026 so 1440p, ultrawide and 4K streams decode). Stopping the final video
+lifetime also frees the shared I420 scratch allocation (up to 12,441,600
 bytes); codec/driver resources are released by dropping their decoders. Allocator
 and driver retention mean this is not an equivalent process-RSS guarantee.
 
