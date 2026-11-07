@@ -51,8 +51,10 @@ general-start-minimized = Spustit minimalizovaně
 general-start-minimized-description = Spustí se na pozadí, aby vám nepřekážel.
 general-startup-unavailable = Automatické spuštění je dostupné ve Windows a macOS.
 general-window = Okno
-general-hide-decorations = Skrýt dekorace okna
-general-hide-decorations-description = Odebere systémový titulní pruh a okraje. K přesunu, změně velikosti nebo zavření použijte správce oken.
+general-hide-decorations = Bez záhlaví okna
+general-hide-decorations-description = Pro dlaždicové správce oken: odebere všechna záhlaví a okraje včetně záhlaví Serein. K přesunu, změně velikosti nebo zavření použijte správce oken.
+general-custom-title-bar = Vlastní záhlaví okna
+general-custom-title-bar-description = Nahradí systémový titulní pruh záhlavím Serein ve stylu GTK 4.
 general-hide-title-bar = Skrýt titulní pruh Sereinu
 general-hide-title-bar-description = Místo něj použije systémový titulní pruh a tlačítka okna.
 general-keep-menu-bar = Ponechat Serein v řádku nabídek
@@ -65,6 +67,8 @@ general-graphics = Grafika
 general-render-with = Vykreslovat pomocí
 general-gpu-restart = Projeví se při příštím spuštění Sereinu.
 general-gpu-current-prefix = Aktuálně vykresluje
+general-steady-refresh-rate = Stálá obnovovací frekvence
+general-steady-refresh-rate-description = Dokud je Serein aktivním oknem, vykresluje na obnovovací frekvenci displeje, takže monitory s proměnlivou obnovovací frekvencí (VRR, G-SYNC, FreeSync) mohou držet jednu frekvenci a neblikat. Spotřebovává více energie.
 gpu-automatic = Automaticky
 gpu-high-performance = Vysoký výkon
 gpu-power-saving = Úspora energie
@@ -85,7 +89,6 @@ hide-chat = Skrýt chat
 show-chat = Zobrazit chat
 search-conversation = Hledat v této konverzaci
 show-member-list = Zobrazit seznam členů
-show-user-profile = Zobrazit profil uživatele
 pinned-messages = Připnuté zprávy
 threads = Vlákna
 
@@ -1547,6 +1550,14 @@ join-server-status-invite-accepted = Pozvánka přijata. Čekání na přístup 
 join-server-status-offline-preview = Offline náhled — připojení k serverům je zakázáno.
 
 ## crates/ui/src/keybinds.rs
+# Context: custom_row
+keybinds-custom-row-remove = Odebrat
+# Context: custom_section
+keybinds-custom-section-add-binding = Přidat zkratku
+# Context: custom_section
+keybinds-custom-section-add-extra-shortcuts-for-any-action-each-key-or-mouse-button-combination-can-only-be-used-once = Přidejte další zkratky pro libovolnou akci. Každou kombinaci klávesy nebo tlačítka myši lze použít jen jednou.
+# Context: custom_section
+keybinds-custom-section-custom-bindings = Vlastní zkratky
 # Context: row
 keybinds-row-global = GLOBÁLNÍ
 # Context: row
@@ -1641,8 +1652,6 @@ main-restoring-screen-use-a-different-account = Použijte jiný účet
 main-restoring-screen-welcome-back = Vítejte zpět
 # Context: sign_in_accounts
 main-sign-in-accounts-saved-accounts = Uložené účty
-# Context: sign_in_consent
-main-sign-in-consent-i-own-this-account-and-authorize-this-session = Vlastním tento účet a autorizuji tuto relaci.
 # Context: sign_in_consent
 main-sign-in-consent-passwords-and-2fa-stay-on-discord-s-own-login-page = Hesla a 2FA zůstávají na vlastní přihlašovací stránce Discordu; ve vašem úložišti pověření OS je zachován pouze token relace.
 # Context: sign_in_disclosures
@@ -1787,6 +1796,10 @@ notification-settings-notification-settings-for-per-channel-or-per-server-notifi
 notification-settings-notification-settings-open = Otevřít
 # Context: notification_settings
 notification-settings-notification-settings-preview-sound = Náhled zvuku
+# Context: notification_settings
+notification-settings-notification-settings-push-to-talk-activate = Aktivace push to talk
+# Context: notification_settings
+notification-settings-notification-settings-push-to-talk-deactivate = Deaktivace push to talk
 # Context: notification_settings
 notification-settings-notification-settings-ringtones-call-devices-and-microphone-processing = Zpracování vyzváněcích tónů, hovorových zařízení a mikrofonu.
 # Context: notification_settings
@@ -2253,6 +2266,12 @@ screen-body-frame-rate = Snímková frekvence
 screen-body-include-the-pointer-in-the-shared-video = Zahrnout ukazatel do sdíleného videa.
 # Context: body
 screen-body-quality = Kvalitní
+# Context: body
+screen-body-source = Zdroj
+# Context: body
+screen-preview-paused-title = Váš stream stále běží!
+# Context: body
+screen-preview-paused-body = Náhled jsme pozastavili, abychom šetřili prostředky.
 # Context: body
 screen-body-quality-selection-does-not-require-nitro = Výběr kvality nevyžaduje Nitro.
 # Context: body
@@ -4000,7 +4019,29 @@ updates-update-settings-restart-to-update = Pro aktualizaci restartujte
 # Context: update_settings
 updates-update-settings-serein-was-installed-via-your-distribution-run-this-in-a = Serein byl nainstalován prostřednictvím vaší distribuce. Spusťte to v terminálu pro aktualizaci.
 # Context: update_settings
+updates-update-settings-save-diagnostics = Uložit diagnostiku
+# Context: update_settings
 updates-update-settings-support-diagnostics = Podpora a diagnostika
+# Context: update_settings
+updates-update-settings-copy-recent-lines = Kopírovat poslední řádky
+# Context: update_settings
+updates-update-settings-diagnostic-log = Diagnostický protokol
+# Context: update_settings
+updates-update-settings-log-errors = Chyby
+# Context: update_settings
+updates-update-settings-log-events = Chyby, varování a události
+# Context: update_settings
+updates-update-settings-log-everything = Vše (podrobně)
+# Context: update_settings
+updates-update-settings-log-off = Vypnuto
+# Context: update_settings
+updates-update-settings-log-warnings = Chyby a varování
+# Context: update_settings
+updates-update-settings-open-folder = Otevřít složku
+# Context: update_settings
+updates-update-settings-the-log-folder-could-not-be-written = Složku protokolu se nepodařilo zapsat. Zkontrolujte složku dat Serein a zkuste to znovu.
+# Context: update_settings
+updates-update-settings-timings-stages-and-failures-in-one-local-file-no-account-channel-or = Časy, fáze a selhání v jednom místním souboru protokolu. Údaje o účtu, kanálech, zprávách a přihlašovací údaje se nikdy nezapisují a nic se neodesílá.
 # Context: update_log
 updates-update-log = Historie aktualizací
 # Context: update_settings
@@ -4121,8 +4162,6 @@ voice-device-combo-device-unavailable = Zařízení není k dispozici
 voice-device-default = Výchozí nastavení systému
 # Context: frame
 voice-frame-open-voice = Otevřený hlas
-# Context: gain_controls
-voice-gain-controls-100-is-the-original-level-higher-levels-may-distort = 100% je původní úroveň. Vyšší úrovně mohou zkreslit.
 # Context: labels
 voice-labels-choose-camera = Vyberte fotoaparát
 # Context: live_badge
@@ -4227,12 +4266,6 @@ voice-voice-participant-microphone-muted = Mikrofon ztlumen
 voice-voice-participant-muted-by-server = Ztlumeno serverem
 # Context: voice_participant
 voice-voice-participant-muted-for-you-on-this-device = Ztlumeno pro vás na tomto zařízení
-# Context: voice_popup_content
-voice-voice-popup-content-choose-an-algorithm-in-all-voice-settings = Vyberte si algoritmus ve všech nastaveních hlasu.
-# Context: voice_popup_content
-voice-voice-popup-content-deafen-turns-off-incoming-audio-and-mutes-your-microphone-with = Deafen vypne příchozí zvuk a ztlumí vám mikrofon.
-# Context: voice_popup_content
-voice-voice-popup-content-hold-your-configured-shortcut-when-you-want-to-speak = Když chcete mluvit, podržte nakonfigurovanou zkratku.
 # Context: voice_popup_content
 voice-voice-popup-content-install-a-voice-enabled-build-to-use-these-controls = Chcete-li používat tyto ovládací prvky, nainstalujte sestavení s podporou hlasu.
 # Context: voice_popup_content
@@ -4496,6 +4529,7 @@ lib-composer-onboarding-incomplete = Dokonči připojení k serveru a odemkni da
 lib-composer-onboarding-complete = Dokončit uvítání
 profiles-message-placeholder = Zpráva pro @{ $user }
 profiles-message-send = Odeslat zprávu
+profiles-message-open-chat = Otevřít chat
 profiles-message-sending = Otevírání soukromé zprávy…
 user-menu-contents-start-a-call = Zahájit hovor
 verification-show-complete-the-check-to-open-this-conversation = Dokonči ověření a otevři tuto konverzaci.
@@ -4832,6 +4866,9 @@ timeline-group-intro = Vítejte na začátku skupiny { $name }.
 timeline-channel-intro-title = Vítejte v #{ $channel }!
 # Context: timeline_channel_intro
 timeline-channel-intro-start = Toto je začátek kanálu #{ $channel }.
+show-user-profile = Zobrazit profil uživatele
+hide-user-profile = Skrýt profil uživatele
+view-full-profile = Zobrazit celý profil
 # Context: text_menu
 text-menu-cut = Vyjmout
 text-menu-copy = Kopírovat
@@ -4930,3 +4967,29 @@ new-message-hint = Přidejte přátele a začněte přímou zprávu nebo skupinu
 new-message-no-people-found = Nikdo neodpovídá hledání.
 new-message-create = Vytvořit zprávu
 new-message-cancel = Zrušit
+
+## Zkratky pro oznámení a časové značky v editoru zpráv
+mention-shortcut-silent = @silent — odeslat bez push oznámení
+mention-shortcut-time = @time — vybrat časovou značku
+message-silent-indicator = Tichá zpráva
+message-silent-hint = Push oznámení a oznámení na ploše jsou potlačena. Odznaky zmínek zůstávají.
+timestamp-picker-title = Vložit časovou značku
+timestamp-picker-date = Datum (RRRR-MM-DD)
+timestamp-picker-clock = Čas (HH:MM:SS)
+timestamp-picker-offset = Posun vůči UTC (±HH:MM)
+timestamp-picker-offset-hint = Výchozí hodnota je váš aktuální místní posun. Upravte ji pro jiné časové pásmo nebo změnu letního času.
+timestamp-picker-format = Formát zobrazení
+timestamp-picker-invalid = Zadejte platné datum, čas a posun vůči UTC.
+timestamp-picker-rejected = Koncept se změnil nebo se časová značka nevejde. Zrušte dialog a zkuste to znovu.
+timestamp-picker-cancel = Zrušit
+timestamp-picker-insert = Vložit
+timestamp-style-default = Výchozí datum a čas
+timestamp-style-t = Krátký čas
+timestamp-style-long-time = Čas se sekundami
+timestamp-style-d = Krátké datum
+timestamp-style-long-date = Dlouhé datum
+timestamp-style-f = Datum a čas
+timestamp-style-full = Úplné datum a čas
+timestamp-style-relative = Relativní čas
+timestamp-style-short-date-time = Krátké datum a čas
+timestamp-style-short-date-seconds = Krátké datum a čas se sekundami
